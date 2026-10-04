@@ -1,0 +1,266 @@
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import os
+import random
+import threading
+import webbrowser
+
+HOST = "0.0.0.0"
+PORT = int(os.environ.get("PORT", "8765"))
+
+PAGE = r'''<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>给浣浣的温柔气泡</title>
+  <style>
+    :root {
+      --ink: #492f3d;
+      --muted: #92707c;
+      --rose: #d96d8c;
+      --rose-deep: #bd4f72;
+      --cream: #fffaf7;
+      --line: rgba(111, 64, 85, .14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: radial-gradient(circle at 12% 15%, #ffe7ee 0 14%, transparent 34%),
+                  radial-gradient(circle at 88% 88%, #fff0ca 0 12%, transparent 31%),
+                  linear-gradient(135deg, #fffaf8, #fdf1f4 52%, #fffaf3);
+      overflow-x: hidden;
+    }
+    .shell { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 42px; }
+    .hero { text-align: center; margin-bottom: 24px; }
+    .eyebrow { color: var(--rose-deep); letter-spacing: .2em; font-size: 12px; font-weight: 700; }
+    h1 { margin: 12px 0 10px; font-family: Georgia, "Songti SC", serif; font-size: clamp(34px, 6vw, 62px); font-weight: 500; letter-spacing: .04em; }
+    .subtitle { color: var(--muted); margin: 0 auto; max-width: 620px; line-height: 1.8; }
+    .layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 20px; align-items: stretch; }
+    .card { background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.88); box-shadow: 0 18px 50px rgba(117, 62, 85, .11); border-radius: 28px; backdrop-filter: blur(12px); }
+    .stage { position: relative; min-height: 590px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; }
+    .stage::before, .stage::after { content: ""; position: absolute; border-radius: 50%; filter: blur(2px); opacity: .5; pointer-events: none; }
+    .stage::before { width: 230px; height: 230px; background: #ffe1e9; top: -82px; right: -50px; }
+    .stage::after { width: 170px; height: 170px; background: #fff0c9; bottom: -65px; left: -45px; }
+    .bubble { position: absolute; bottom: 145px; left: 50%; transform: translateX(-50%); max-width: min(78%, 460px); padding: 17px 25px 18px; border: 1px solid rgba(255,255,255,.9); border-radius: 24px 24px 24px 8px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,241,246,.9)); color: var(--ink); line-height: 1.7; letter-spacing: .03em; text-align: center; box-shadow: 0 12px 30px rgba(142, 70, 97, .17), 0 0 0 5px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.95); z-index: 2; animation: floatUp 7.6s cubic-bezier(.22,.7,.25,1) forwards; }
+    .bubble::before { content: "✦"; position: absolute; top: -14px; right: 17px; color: #ef9bb1; font-size: 15px; text-shadow: 0 2px 8px rgba(217,109,140,.35); animation: sparkle 1.8s ease-in-out infinite alternate; }
+    .bubble::after { content: ""; position: absolute; bottom: -10px; left: 19px; width: 18px; height: 18px; border-right: 1px solid rgba(255,255,255,.9); border-bottom: 1px solid rgba(255,255,255,.9); background: #fff4f7; transform: rotate(35deg) skew(-8deg); }
+    @keyframes sparkle { from { transform: scale(.78) rotate(-12deg); opacity: .45; } to { transform: scale(1.16) rotate(12deg); opacity: 1; } }
+    @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 38px) scale(.72) rotate(-4deg); filter: blur(2px); } 12% { opacity: 1; filter: blur(0); } 58% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--drift)), -390px) scale(1.08) rotate(var(--tilt)); filter: blur(1px); } }
+    .orb { position: absolute; inset: 0; pointer-events: none; }
+    .spark { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #f4a9bb; opacity: .55; animation: twinkle 2.7s ease-in-out infinite alternate; }
+    @keyframes twinkle { from { transform: scale(.5); opacity: .2; } to { transform: scale(1.5); opacity: .8; } }
+    .stage-copy { position: relative; z-index: 3; text-align: center; }
+    .stage-copy p { color: var(--muted); margin: 0 0 18px; font-size: 14px; }
+    .heart-button { border: 0; cursor: pointer; color: white; font: inherit; font-size: 18px; font-weight: 700; padding: 16px 36px; border-radius: 999px; background: linear-gradient(135deg, var(--rose), #ef9bab); box-shadow: 0 10px 24px rgba(217, 109, 140, .35); transition: transform .2s, box-shadow .2s; }
+    .heart-button:hover { transform: translateY(-3px); box-shadow: 0 14px 28px rgba(217, 109, 140, .44); }
+    .heart-button:active { transform: translateY(0) scale(.97); }
+    .panel { padding: 28px; }
+    .panel h2 { margin: 0 0 8px; font-size: 20px; }
+    .panel .hint { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0 0 18px; }
+    textarea { width: 100%; min-height: 145px; resize: vertical; border: 1px solid var(--line); border-radius: 16px; padding: 14px; color: var(--ink); background: rgba(255,250,248,.82); font: inherit; line-height: 1.7; outline: none; }
+    textarea:focus { border-color: #e99aae; box-shadow: 0 0 0 4px rgba(233,154,174,.14); }
+    .small-button { margin-top: 12px; width: 100%; border: 1px solid #edb3c1; color: var(--rose-deep); background: #fff8fa; padding: 11px; border-radius: 12px; cursor: pointer; font: inherit; font-weight: 700; }
+    .small-button:hover { background: #fff0f4; }
+    .share-status { min-height: 20px; margin-top: 9px; color: var(--rose-deep); font-size: 12px; line-height: 1.5; word-break: break-all; }
+    .music-box { margin-top: 18px; padding: 16px; border: 1px solid rgba(233,154,174,.28); border-radius: 18px; background: linear-gradient(135deg, rgba(255,248,250,.92), rgba(255,242,222,.66)); }
+    .music-title { display: flex; justify-content: space-between; align-items: center; color: var(--ink); font-size: 14px; font-weight: 700; }
+    .music-note { color: var(--rose); font-size: 22px; animation: musicPulse 1.5s ease-in-out infinite alternate; }
+    .music-controls { display: flex; align-items: center; gap: 9px; margin-top: 13px; color: var(--muted); font-size: 12px; }
+    .music-toggle { border: 0; border-radius: 999px; padding: 8px 13px; color: white; background: var(--rose); cursor: pointer; font: inherit; font-weight: 700; }
+    .music-toggle:hover { background: var(--rose-deep); }
+    #volume { flex: 1; accent-color: var(--rose); cursor: pointer; }
+    .music-hint { margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    @keyframes musicPulse { from { transform: translateY(1px) rotate(-8deg); opacity: .55; } to { transform: translateY(-2px) rotate(8deg); opacity: 1; } }
+    .tips { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .tips strong { font-size: 14px; }
+    .tips p { margin: 9px 0 0; color: var(--muted); line-height: 1.8; font-size: 13px; }
+    @media (max-width: 760px) { .shell { padding-top: 24px; } .layout { grid-template-columns: 1fr; } .stage { min-height: 480px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="eyebrow">A LITTLE SOFTNESS FOR HUANHUAN</div>
+      <h1>给浣浣的温柔气泡</h1>
+      <p class="subtitle">每一次点击，都会有一句来自白白、认真写给浣浣的话，轻轻漂上来，像一颗不打扰的心意。</p>
+    </header>
+    <section class="layout">
+      <div class="card stage" id="stage">
+        <div class="orb" id="orb"></div>
+        <div class="stage-copy">
+          <p>今天也为浣浣留一朵来自白白的小小浪漫</p>
+          <button class="heart-button" id="send">让浣浣收到爱意 ♥</button>
+        </div>
+      </div>
+      <aside class="card panel">
+        <h2>写下专属气泡</h2>
+        <p class="hint">每次写一段新心意并点击保存，都会追加到气泡收藏中，不会覆盖之前的文字。每行仍会作为一条独立气泡。</p>
+        <textarea id="custom" placeholder="写下这一刻想对浣浣说的话……&#10;例如：今天路过熟悉的街角，白白又想起浣浣了"></textarea>
+        <button class="small-button" id="save">保存这份心意</button>
+        <button class="small-button" id="share">生成分享链接</button>
+        <div class="share-status" id="shareStatus" aria-live="polite"></div>
+        <div class="music-box">
+          <div class="music-title"><span>与你的独家记忆</span><span class="music-note">♪</span></div>
+          <audio id="music" src="/music.mp3" loop autoplay preload="auto"></audio>
+          <div class="music-controls">
+            <button class="music-toggle" id="musicToggle">播放音乐</button>
+            <label for="volume">音量</label>
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.55">
+          </div>
+          <div class="music-hint" id="musicHint">音乐会循环播放，点击按钮即可暂停或继续</div>
+        </div>
+        <div class="tips">
+          <strong>让文字更像一封信</strong>
+          <p>少一点客套，多一点具体：写下某个瞬间、某个称呼，或一句只有浣浣听得懂的话，气泡就会变得很特别。</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const defaultLines = [
+      '浣浣，今天也辛苦啦，愿晚风替我把温柔送到身边。',
+      '如果世界偶尔喧闹，浣浣就先做自己的安静星球。',
+      '浣浣不用一直闪闪发光，被好好拥抱本身就很珍贵。',
+      '愿浣浣走过的每一段路，都有花开，也有值得的人等候。',
+      '浣浣的可爱不需要证明，它早就藏在每个不经意的瞬间里。',
+      '今天的快乐请签收，落款是：一直想念浣浣的白白。',
+      '浣浣，愿所有小小的期待，都在某个清晨如约抵达。',
+      '把一颗软乎乎的心意放在这里，送给独一无二的浣浣。'
+    ];
+    const stage = document.getElementById('stage');
+    const custom = document.getElementById('custom');
+    const send = document.getElementById('send');
+    const save = document.getElementById('save');
+    const share = document.getElementById('share');
+    const shareStatus = document.getElementById('shareStatus');
+    const music = document.getElementById('music');
+    const musicToggle = document.getElementById('musicToggle');
+    const volume = document.getElementById('volume');
+    const musicHint = document.getElementById('musicHint');
+    let lines = [...defaultLines];
+    let customLines = [];
+    let nextLineIndex = 0;
+    let saved = false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const shared = params.get('messages');
+      const stored = localStorage.getItem('huanhuan-bubbles');
+      const source = shared || stored;
+      if (source) {
+        const decoded = shared ? decodeURIComponent(escape(atob(shared))) : source;
+        customLines = decoded.split(/\n+/).map(x => x.trim()).filter(Boolean);
+        lines = [...defaultLines, ...customLines];
+      }
+    } catch (_) {}
+
+    function createSparkles() {
+      const orb = document.getElementById('orb');
+      for (let i = 0; i < 18; i++) { const dot = document.createElement('i'); dot.className = 'spark'; dot.style.left = `${8 + Math.random() * 84}%`; dot.style.top = `${7 + Math.random() * 67}%`; dot.style.animationDelay = `${Math.random() * 2}s`; orb.appendChild(dot); }
+    }
+    function floatBubble() {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = lines[nextLineIndex];
+      nextLineIndex = (nextLineIndex + 1) % lines.length;
+      bubble.style.setProperty('--drift', `${Math.round((Math.random() - .5) * 150)}px`);
+      bubble.style.setProperty('--tilt', `${Math.round((Math.random() - .5) * 8)}deg`);
+      bubble.style.setProperty('--hue', `${Math.round(Math.random() * 12)}deg`);
+      bubble.style.filter = `hue-rotate(var(--hue))`;
+      bubble.style.left = `${38 + Math.random() * 24}%`;
+      bubble.style.bottom = `${128 + Math.random() * 28}px`;
+      stage.appendChild(bubble);
+      setTimeout(() => bubble.remove(), 7600);
+    }
+    send.addEventListener('click', floatBubble);
+    save.addEventListener('click', () => {
+      const added = custom.value.split(/\n+/).map(x => x.trim()).filter(Boolean);
+      if (!added.length) {
+        save.textContent = '请先写下新的心意';
+        setTimeout(() => { save.textContent = '保存这份心意'; }, 2200);
+        return;
+      }
+      customLines = [...customLines, ...added];
+      lines = [...defaultLines, ...customLines];
+      try { localStorage.setItem('huanhuan-bubbles', customLines.join('\n')); } catch (_) {}
+      custom.value = '';
+      saved = true; save.textContent = `已保存 ${added.length} 条，旧文字未被覆盖`;
+      setTimeout(() => { save.textContent = '保存这份心意'; saved = false; }, 2200);
+    });
+    share.addEventListener('click', async () => {
+      const pending = custom.value.split(/\n+/).map(x => x.trim()).filter(Boolean);
+      const allCustomLines = [...customLines, ...pending];
+      if (!allCustomLines.length) {
+        shareStatus.textContent = '请先写下至少一条自定义文案';
+        return;
+      }
+      const encoded = btoa(unescape(encodeURIComponent(allCustomLines.join('\n'))));
+      const shareUrl = `${window.location.origin}${window.location.pathname}?messages=${encodeURIComponent(encoded)}`;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        shareStatus.textContent = '分享链接已复制，发给浣浣即可';
+      } catch (_) {
+        shareStatus.textContent = `请复制这个链接：${shareUrl}`;
+      }
+    });
+    music.volume = Number(volume.value);
+    music.addEventListener('play', () => { musicToggle.textContent = '暂停音乐'; musicHint.textContent = '正在循环播放，随时可以暂停'; });
+    music.addEventListener('pause', () => { musicToggle.textContent = '播放音乐'; musicHint.textContent = '音乐已暂停，点击按钮继续播放'; });
+    musicToggle.addEventListener('click', async () => {
+      if (music.paused) {
+        try { await music.play(); } catch (_) { musicHint.textContent = '浏览器阻止了自动播放，请再次点击按钮'; }
+      } else {
+        music.pause();
+      }
+    });
+    volume.addEventListener('input', () => { music.volume = Number(volume.value); });
+    music.play().catch(() => { musicHint.textContent = '点击“播放音乐”开始播放背景音乐'; });
+    createSparkles();
+  </script>
+</body>
+</html>'''
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/music.mp3':
+            try:
+                with open(os.path.join(os.path.dirname(__file__), 'Nor - Sugar story.mp3'), 'rb') as music_file:
+                    body = music_file.read()
+            except OSError:
+                self.send_error(404)
+                return
+            self.send_response(200)
+            self.send_header('Content-Type', 'audio/mpeg')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Accept-Ranges', 'bytes')
+            self.end_headers()
+            self.wfile.write(body)
+        elif self.path in ('/', '/index.html'):
+            body = PAGE.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_error(404)
+
+    def log_message(self, format, *args):
+        return
+
+
+def main():
+    server = ThreadingHTTPServer((HOST, PORT), Handler)
+    url = f'http://{HOST}:{PORT}'
+    print(f'网页已启动：{url}')
+    print('按 Ctrl+C 停止服务')
+    threading.Timer(0.5, lambda: webbrowser.open(url)).start()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print('\n网页已停止')
+        server.server_close()
+
+
+if __name__ == '__main__':
+    main()
