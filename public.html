@@ -39,8 +39,9 @@
     .nickname-box { padding: 16px; border: 1px solid rgba(233,154,174,.28); border-radius: 18px; background: rgba(255,248,250,.72); }
     .nickname-box label { display: block; margin-bottom: 9px; color: var(--ink); font-size: 14px; font-weight: 700; }
     .nickname-row { display: flex; gap: 8px; }
-    #nickname { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; color: var(--ink); background: rgba(255,255,255,.82); font: inherit; outline: none; }
-    #nickname:focus { border-color: #e99aae; box-shadow: 0 0 0 4px rgba(233,154,174,.14); }
+    .nickname-row + .nickname-row { margin-top: 10px; }
+    #nickname, #authorNickname { min-width: 0; flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; color: var(--ink); background: rgba(255,255,255,.82); font: inherit; outline: none; }
+    #nickname:focus, #authorNickname:focus { border-color: #e99aae; box-shadow: 0 0 0 4px rgba(233,154,174,.14); }
     .nickname-row .small-button { width: auto; margin-top: 0; padding: 10px 15px; white-space: nowrap; }
     .small-button { margin-top: 12px; width: 100%; border: 1px solid #edb3c1; color: var(--rose-deep); background: #fff8fa; padding: 11px; border-radius: 12px; cursor: pointer; font: inherit; font-weight: 700; }
     .small-button:hover { background: #fff0f4; }
@@ -89,6 +90,8 @@
         <div class="nickname-box">
           <label for="nickname">ta的昵称</label>
           <div class="nickname-row"><input id="nickname" maxlength="30" placeholder="例如：小太阳"><button class="small-button" id="nicknameSave">保存并应用</button></div>
+          <label for="authorNickname" style="margin-top:12px">我的昵称</label>
+          <div class="nickname-row"><input id="authorNickname" maxlength="30" placeholder="例如：白白"><button class="small-button" id="authorNicknameSave">保存并应用</button></div>
           <div class="nickname-status" id="nicknameStatus" aria-live="polite"></div>
         </div>
         <div class="custom-box">
@@ -114,28 +117,31 @@
       '{name}不用一直闪闪发光，被好好拥抱本身就很珍贵。',
       '愿{name}走过的每一段路，都有花开，也有值得的人等候。',
       '{name}的可爱不需要证明，它早就藏在每个不经意的瞬间里。',
-      '今天的快乐请签收，落款是：一直想念{name}的{name}。',
+      '今天的快乐请签收，落款是：一直想念{name}的{author}。',
       '{name}，愿所有小小的期待，都在某个清晨如约抵达。',
       '把一颗软乎乎的心意放在这里，送给独一无二的{name}。'
     ];
-    const stage = document.getElementById('stage'), send = document.getElementById('send'), nickname = document.getElementById('nickname'), nicknameSave = document.getElementById('nicknameSave'), nicknameStatus = document.getElementById('nicknameStatus'), stagePrompt = document.getElementById('stagePrompt');
+    const stage = document.getElementById('stage'), send = document.getElementById('send'), nickname = document.getElementById('nickname'), nicknameSave = document.getElementById('nicknameSave'), authorNickname = document.getElementById('authorNickname'), authorNicknameSave = document.getElementById('authorNicknameSave'), nicknameStatus = document.getElementById('nicknameStatus'), stagePrompt = document.getElementById('stagePrompt');
     const customLinesInput = document.getElementById('customLines'), customSave = document.getElementById('customSave'), share = document.getElementById('share'), shareStatus = document.getElementById('shareStatus');
     const music = document.getElementById('music'), musicToggle = document.getElementById('musicToggle'), volume = document.getElementById('volume'), musicHint = document.getElementById('musicHint');
-    let currentName = '你', customLines = [], lines = [], nextLineIndex = 0;
+    let currentName = '你', authorName = '我', customLines = [], lines = [], nextLineIndex = 0;
     try {
       const params = new URLSearchParams(window.location.search);
       currentName = (params.get('name') || localStorage.getItem('public-bubbles-nickname') || '').trim() || '你';
+      authorName = (params.get('author') || localStorage.getItem('public-bubbles-author') || '').trim() || '我';
       const storedLines = params.get('lines') || localStorage.getItem('public-bubbles-lines') || '';
       customLines = storedLines ? decodeURIComponent(escape(atob(storedLines))).split(/\n+/).map(x => x.trim()).filter(Boolean) : [];
     } catch (_) {}
     nickname.value = currentName === '你' ? '' : currentName;
-    function refreshLines() { lines = [...defaultTemplates.map(line => line.replaceAll('{name}', currentName)), ...customLines]; document.getElementById('subtitle').textContent = `每一次点击，都会有一句来自${currentName}、认真写给你的话，轻轻漂上来，像一颗不打扰的心意。`; stagePrompt.textContent = `今天也为${currentName}留一朵来自${currentName}的小小浪漫`; send.textContent = `让${currentName}收到爱意 ♥`; }
+    authorNickname.value = authorName === '我' ? '' : authorName;
+    function refreshLines() { lines = [...defaultTemplates.map(line => line.replaceAll('{name}', currentName).replaceAll('{author}', authorName)), ...customLines]; document.getElementById('subtitle').textContent = `每一次点击，都会有一句来自${authorName}、认真写给你的话，轻轻漂上来，像一颗不打扰的心意。`; stagePrompt.textContent = `今天也为${currentName}留一朵来自${authorName}的小小浪漫`; send.textContent = `让${currentName}收到爱意 ♥`; }
     function createSparkles() { const orb = document.getElementById('orb'); for (let i = 0; i < 18; i++) { const dot = document.createElement('i'); dot.className = 'spark'; dot.style.left = `${8 + Math.random() * 84}%`; dot.style.top = `${7 + Math.random() * 67}%`; dot.style.animationDelay = `${Math.random() * 2}s`; orb.appendChild(dot); } }
     function playBubbleSound() { const AudioContext = window.AudioContext || window.webkitAudioContext; if (!AudioContext) return; const context = window.bubbleAudioContext || (window.bubbleAudioContext = new AudioContext()); if (context.state === 'suspended') context.resume(); const oscillator = context.createOscillator(), gain = context.createGain(); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(660, context.currentTime); oscillator.frequency.exponentialRampToValueAtTime(990, context.currentTime + 0.12); gain.gain.setValueAtTime(0.0001, context.currentTime); gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.015); gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18); oscillator.connect(gain).connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + 0.2); }
     function floatBubble() { playBubbleSound(); const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = lines[nextLineIndex]; nextLineIndex = (nextLineIndex + 1) % lines.length; bubble.style.setProperty('--drift', `${Math.round((Math.random() - .5) * 150)}px`); bubble.style.setProperty('--tilt', `${Math.round((Math.random() - .5) * 8)}deg`); bubble.style.setProperty('--hue', `${Math.round(Math.random() * 12)}deg`); bubble.style.filter = 'hue-rotate(var(--hue))'; bubble.style.left = `${38 + Math.random() * 24}%`; bubble.style.bottom = `${128 + Math.random() * 28}px`; stage.appendChild(bubble); setTimeout(() => bubble.remove(), 7600); }
     nicknameSave.addEventListener('click', () => { currentName = nickname.value.trim() || '你'; nickname.value = currentName === '你' ? '' : currentName; try { localStorage.setItem('public-bubbles-nickname', currentName === '你' ? '' : currentName); } catch (_) {} refreshLines(); nicknameStatus.textContent = `已应用称呼“${currentName}”`; setTimeout(() => { nicknameStatus.textContent = ''; }, 2200); });
+    authorNicknameSave.addEventListener('click', () => { authorName = authorNickname.value.trim() || '我'; authorNickname.value = authorName === '我' ? '' : authorName; try { localStorage.setItem('public-bubbles-author', authorName === '我' ? '' : authorName); } catch (_) {} refreshLines(); nicknameStatus.textContent = `已应用我的昵称“${authorName}”`; setTimeout(() => { nicknameStatus.textContent = ''; }, 2200); });
     customSave.addEventListener('click', () => { const added = customLinesInput.value.split(/\n+/).map(x => x.trim()).filter(Boolean); if (!added.length) { shareStatus.textContent = '请先写下至少一条气泡文字'; return; } customLines = [...customLines, ...added]; try { localStorage.setItem('public-bubbles-lines', customLines.join('\n')); } catch (_) {} customLinesInput.value = ''; refreshLines(); shareStatus.textContent = `已追加 ${added.length} 条文字，原有内容未被覆盖`; });
-    share.addEventListener('click', async () => { const pending = customLinesInput.value.split(/\n+/).map(x => x.trim()).filter(Boolean); const allLines = [...customLines, ...pending]; const encodedLines = allLines.length ? btoa(unescape(encodeURIComponent(allLines.join('\n')))) : ''; const params = new URLSearchParams(); if (currentName !== '你') params.set('name', currentName); if (encodedLines) params.set('lines', encodedLines); const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`; try { await navigator.clipboard.writeText(shareUrl); shareStatus.textContent = '分享链接已复制，可直接发给访客'; } catch (_) { shareStatus.textContent = `请复制这个链接：${shareUrl}`; } });
+    share.addEventListener('click', async () => { const pending = customLinesInput.value.split(/\n+/).map(x => x.trim()).filter(Boolean); const allLines = [...customLines, ...pending]; const encodedLines = allLines.length ? btoa(unescape(encodeURIComponent(allLines.join('\n')))) : ''; const params = new URLSearchParams(); if (currentName !== '你') params.set('name', currentName); if (authorName !== '我') params.set('author', authorName); if (encodedLines) params.set('lines', encodedLines); const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`; try { await navigator.clipboard.writeText(shareUrl); shareStatus.textContent = '分享链接已复制，可直接发给访客'; } catch (_) { shareStatus.textContent = `请复制这个链接：${shareUrl}`; } });
     send.addEventListener('click', floatBubble);
     music.volume = Number(volume.value); music.addEventListener('play', () => { musicToggle.textContent = '暂停音乐'; musicHint.textContent = '正在循环播放，随时可以暂停'; }); music.addEventListener('pause', () => { musicToggle.textContent = '播放音乐'; musicHint.textContent = '音乐已暂停，点击按钮继续播放'; }); musicToggle.addEventListener('click', async () => { if (music.paused) { try { await music.play(); } catch (_) { musicHint.textContent = '浏览器阻止了自动播放，请再次点击按钮'; } } else music.pause(); }); volume.addEventListener('input', () => { music.volume = Number(volume.value); }); music.play().catch(() => { musicHint.textContent = '点击“播放音乐”开始播放背景音乐'; });
     refreshLines(); createSparkles();
