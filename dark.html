@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>黑化版 · 给浣浣的气泡</title>
+  <style>
+    :root { --bg:#fff7f8; --ink:#482f3d; --accent:#d85d81; --muted:#92707c; --stage:#fffafb; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:radial-gradient(circle at 15% 10%,#ffe3eb 0 15%,transparent 35%),linear-gradient(135deg,#fffaf8,#f9edf1 60%,#fff5f2); transition:background .8s,color .8s; overflow-x:hidden; }
+    body.dark { --bg:#08090d; --ink:#f2e8ed; --accent:#b21f4c; --muted:#a995a0; --stage:#11131a; background:radial-gradient(circle at 50% 20%,#321321 0,transparent 36%),linear-gradient(145deg,#07080b,#171018 58%,#090a0e); }
+    .shell { width:min(1080px,calc(100% - 30px)); margin:auto; padding:30px 0 40px; }
+    .hero { position:relative; text-align:center; margin-bottom:20px; }
+    .eyebrow { font-size:11px; letter-spacing:.24em; font-weight:700; color:var(--accent); }
+    h1 { margin:12px 0 8px; font:500 clamp(34px,6vw,60px) Georgia,"Songti SC",serif; letter-spacing:.08em; }
+    .subtitle { margin:0 auto; max-width:680px; color:var(--muted); line-height:1.8; }
+    .watermark { position:absolute; right:0; bottom:-3px; font-size:11px; color:var(--muted); }
+    .layout { display:grid; grid-template-columns:1.25fr .75fr; gap:20px; }
+    .card { border:1px solid rgba(255,255,255,.75); border-radius:26px; background:rgba(255,255,255,.64); box-shadow:0 18px 50px rgba(90,35,58,.14); backdrop-filter:blur(14px); transition:background .8s,border-color .8s,box-shadow .8s; }
+    .dark .card { background:rgba(15,16,22,.78); border-color:rgba(255,255,255,.09); box-shadow:0 20px 70px rgba(0,0,0,.46); }
+    .stage { position:relative; min-height:610px; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:30px; }
+    .stage::before,.stage::after { content:""; position:absolute; border-radius:50%; filter:blur(4px); opacity:.55; transition:opacity .8s,background .8s; pointer-events:none; }
+    .stage::before { width:230px;height:230px;right:-55px;top:-90px;background:#ffe0ea; }
+    .stage::after { width:180px;height:180px;left:-55px;bottom:-65px;background:#fff0c9; }
+    .dark .stage::before { background:#3b1426; opacity:.25; }.dark .stage::after { background:#171c35; opacity:.2; }
+    .stage.shake { animation:shake .45s ease; }.stage.shatter { box-shadow:inset 0 0 170px rgba(190,18,66,.72),0 0 95px rgba(190,18,66,.72); }
+    .stage.shatter::before { content:""; position:absolute; inset:0; z-index:2; pointer-events:none; background:radial-gradient(circle at 50% 50%,transparent 0 7%,rgba(255,255,255,.55) 7.4%,transparent 8.2%),linear-gradient(22deg,transparent 42%,rgba(255,255,255,.95) 42.4%,transparent 43.2%),linear-gradient(158deg,transparent 51%,rgba(255,255,255,.9) 51.4%,transparent 52.2%),linear-gradient(76deg,transparent 57%,rgba(255,255,255,.8) 57.4%,transparent 58.1%),linear-gradient(132deg,transparent 35%,rgba(255,255,255,.72) 35.4%,transparent 36.1%); mix-blend-mode:screen; animation:crackBurst .55s ease-out; }
+    @keyframes crackBurst { 0% { opacity:0; transform:scale(.82); filter:brightness(1); } 18% { opacity:1; transform:scale(1.04); filter:brightness(2.2); } 100% { opacity:.82; transform:scale(1); filter:brightness(1); } }
+    @keyframes shake { 0%,100%{transform:translate(0)} 20%{transform:translate(-5px,2px) rotate(-.4deg)} 40%{transform:translate(5px,-2px) rotate(.4deg)} 60%{transform:translate(-3px,1px)} 80%{transform:translate(3px)} }
+    .cracks { position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .5s; background:linear-gradient(115deg,transparent 47%,rgba(255,255,255,.65) 48%,transparent 49%),linear-gradient(28deg,transparent 51%,rgba(255,255,255,.45) 52%,transparent 53%),linear-gradient(160deg,transparent 57%,rgba(255,255,255,.5) 58%,transparent 59%); mix-blend-mode:screen; }
+    .shatter .cracks { opacity:1; background:linear-gradient(115deg,transparent 31%,rgba(255,255,255,.95) 31.35%,transparent 32%),linear-gradient(28deg,transparent 51%,rgba(255,255,255,.85) 51.35%,transparent 52%),linear-gradient(160deg,transparent 68%,rgba(255,255,255,.9) 68.35%,transparent 69%),linear-gradient(78deg,transparent 43%,rgba(255,255,255,.72) 43.3%,transparent 44%); animation:crackFlash .55s ease-out; }
+    @keyframes crackFlash { 0% { opacity:0; filter:brightness(1); } 15% { opacity:1; filter:brightness(2.4); } 100% { opacity:.9; filter:brightness(1); } }
+    .center-message { position:relative; z-index:3; max-width:90%; min-height:170px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:clamp(25px,4vw,46px); font-weight:900; line-height:1.45; letter-spacing:.06em; color:var(--ink); text-shadow:0 2px 18px rgba(216,93,129,.18); transition:color .8s,text-shadow .8s,transform .3s; }
+    .dark .center-message { color:#fff1f5; text-shadow:0 0 14px rgba(226,30,89,.62),2px 2px 0 #560d28; }
+    .center-message.pulse { animation:messageIn .55s ease; }.center-message.corrupt { animation:corrupt .7s ease; }
+    @keyframes messageIn { from{opacity:0;transform:scale(.84);filter:blur(5px)} to{opacity:1;transform:scale(1);filter:blur(0)} }
+    @keyframes corrupt { 0%,100%{transform:skew(0)} 20%{transform:skew(8deg,-3deg);filter:blur(1px)} 40%{transform:translate(-5px,2px)} 60%{transform:translate(5px,-2px);color:#ff426f} }
+    .stage-copy { position:absolute; z-index:4; bottom:28px; width:calc(100% - 60px); text-align:center; }.stage-copy p{margin:0 0 14px;color:var(--muted);font-size:13px;}
+    .heart-button { border:0; cursor:pointer; color:#fff; font:inherit;font-size:18px;font-weight:800;padding:15px 34px;border-radius:999px;background:linear-gradient(135deg,var(--accent),#ef91aa);box-shadow:0 10px 28px rgba(200,50,92,.3);transition:.25s; }.heart-button:hover{transform:translateY(-3px)}.heart-button:active{transform:scale(.96)}
+    .panel{padding:26px}.panel h2{margin:0 0 8px;font-size:20px}.hint{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 16px}textarea{width:100%;min-height:135px;resize:vertical;border:1px solid rgba(190,100,125,.25);border-radius:15px;padding:13px;color:var(--ink);background:rgba(255,255,255,.5);font:inherit;line-height:1.7;outline:none}.dark textarea{background:rgba(0,0,0,.25)}
+    input#nickname { width:100%; margin-bottom:8px; border:1px solid rgba(190,100,125,.25); border-radius:15px; padding:13px; color:var(--ink); background:rgba(255,255,255,.5); font:inherit; outline:none; } .dark input#nickname { background:rgba(0,0,0,.25); }
+    @media(max-width:760px){.layout{grid-template-columns:1fr}.stage{min-height:510px}.watermark{position:static;margin-top:8px}.center-message{font-size:29px}}
+  </style>
+</head>
+<body>
+  <main class="shell"><header class="hero"><div class="eyebrow">A LOVE THAT CHANGES SHAPE</div><h1><span id="titleName">浣浣</span> · 黑化气泡</h1><p class="subtitle">点击越多，温柔越深，世界也会逐渐裂开。你可以写下每一次想说的话。</p><div class="watermark">——作者：白白爱吃菜丷</div></header>
+    <section class="layout"><div class="card stage" id="stage"><div class="cracks"></div><div class="center-message" id="message">点击按钮，让心意浮现</div><div class="stage-copy"><p id="stageHint">第 0 次点击 · 一切还很温柔</p><button class="heart-button" id="send">让浣浣收到爱意 ♥</button></div></div>
+      <aside class="card panel"><h2>写下黑化台词</h2><p class="hint">先设置对象昵称，再写下台词。每行一条，文字会以大号加粗的形式出现在页面中央，并按顺序出现。</p><input id="nickname" placeholder="对象昵称，例如：浣浣" value="浣浣"><textarea id="custom" placeholder="例如：你终于想起我了吗？&#10;例如：别再离开我的视线。"></textarea><button class="small-button" id="save">保存文字</button><button class="small-button" id="share">生成分享链接</button><div class="status" id="status"></div><div class="music-box"><div class="music-title"><span>背景音乐</span><span>♪</span></div><audio id="music" src="Nor%20-%20Sugar%20story.mp3" loop preload="auto"></audio><div class="music-controls"><button class="music-toggle" id="musicToggle">播放音乐</button><label>音量</label><input id="volume" type="range" min="0" max="1" step=".01" value=".55"></div></div><div class="count" id="count">点击 0 次 · 尚未破碎</div></aside></section>
+  </main>
+  <script>
+    const defaults=['浣浣，今天也要好好对待自己。','我一直都在这里，等你回头。','温柔没有消失，只是开始变得偏执。','你可以走远，但不要试图从我的世界消失。','所有裂痕，都是因为太在乎。','别怕，这一次我不会再松手。'];
+    const lateLines=['不要离开我！！！','哈哈哈...','......这样么'];
+    const stage=document.getElementById('stage'),message=document.getElementById('message'),send=document.getElementById('send'),nickname=document.getElementById('nickname'),titleName=document.getElementById('titleName'),custom=document.getElementById('custom'),save=document.getElementById('save'),share=document.getElementById('share'),status=document.getElementById('status'),count=document.getElementById('count'),stageHint=document.getElementById('stageHint'),music=document.getElementById('music'),musicToggle=document.getElementById('musicToggle'),volume=document.getElementById('volume');
+    let customLines=[],lines=[...defaults],index=0,clicks=0,objectName='浣浣';
+    try { const p=new URLSearchParams(location.search),shared=p.get('messages'),stored=localStorage.getItem('dark-bubbles'),savedName=p.get('name')||localStorage.getItem('dark-bubbles-name'); objectName=(savedName||'浣浣').trim()||'浣浣'; nickname.value=objectName; titleName.textContent=objectName; send.textContent=`让${objectName}收到爱意 ♥`; const raw=shared?decodeURIComponent(escape(atob(shared))):stored; if(raw) customLines=raw.split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(-10); lines=[...defaults,...customLines]; } catch(e){}
+    function glassSound(){ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const c=window.darkAudio||(window.darkAudio=new AC()),n=c.sampleRate*.28,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.4);const s=c.createBufferSource(),g=c.createGain(),f=c.createBiquadFilter();f.type='highpass';f.frequency.value=900;g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.28,c.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.28);s.buffer=b;s.connect(f).connect(g).connect(c.destination);s.start();}
+    function show(){ clicks++; const activeLines=clicks>=80?lateLines:lines; const rawText=activeLines[index%activeLines.length].replaceAll('浣浣',objectName); index=(index+1)%activeLines.length; message.textContent=clicks>=90?glitchText(rawText):rawText; message.classList.remove('pulse','corrupt');void message.offsetWidth;message.classList.add(clicks%5===0||clicks>=90?'corrupt':'pulse'); if(clicks%5===0){document.body.classList.add('dark');stage.classList.remove('shatter');void stage.offsetWidth;stage.classList.add('shatter','shake');glassSound();setTimeout(()=>stage.classList.remove('shake'),500);} if(clicks>=10) document.body.classList.add('dark'); const level=clicks<5?'一切还很温柔':clicks<80?'裂痕正在蔓延':clicks<90?'固定讯号反复回响':'最后的讯号';stageHint.textContent=`第 ${clicks} 次点击 · ${level}`;count.textContent=`点击 ${clicks} 次 · ${clicks%5===0?'玻璃裂开了':'黑化进度 '+Math.min(100,Math.round(clicks/100*100))+'%'}`; if(clicks===100) endPage();}
+    function glitchText(text){ const chars='█▓▒░#@$%&*'; return [...text].map((char,i)=>i%2?chars[Math.floor(Math.random()*chars.length)]:char).join(''); }
+    function endPage(){ message.textContent=glitchText('不要离开我！！！'); stage.classList.add('shatter','shake'); document.body.classList.add('dark'); send.disabled=true; send.textContent='信号中断'; stageHint.textContent='连接已断开'; setTimeout(()=>{ try { window.close(); } catch (_) {} document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;background:#050507;color:#d51e55;font:900 28px Microsoft YaHei;text-align:center;padding:24px">信号已中断<br><small style="font-size:14px;color:#92707c">请关闭此页面</small></main>'; },2200); }
+    send.addEventListener('click',show);
+    nickname.addEventListener('change',()=>{ objectName=nickname.value.trim()||'浣浣'; nickname.value=objectName; titleName.textContent=objectName; send.textContent=`让${objectName}收到爱意 ♥`; localStorage.setItem('dark-bubbles-name',objectName); });
+    save.addEventListener('click',()=>{const added=custom.value.split(/\n+/).map(x=>x.trim()).filter(Boolean);if(!added.length){status.textContent='请先写下至少一条文字';return;}customLines=[...customLines,...added].slice(-10);lines=[...defaults,...customLines];localStorage.setItem('dark-bubbles',customLines.join('\n'));custom.value='';status.textContent=`已保存，当前自定义文本 ${customLines.length}/10 条，保留最新内容`});
+    share.addEventListener('click',async()=>{const pending=custom.value.split(/\n+/).map(x=>x.trim()).filter(Boolean),all=[...customLines,...pending];if(!all.length){status.textContent='请先保存或输入自定义文字';return;}const encoded=btoa(unescape(encodeURIComponent(all.join('\n')))),url=`${location.origin}${location.pathname}?messages=${encodeURIComponent(encoded)}&name=${encodeURIComponent(objectName)}`;try{await navigator.clipboard.writeText(url);status.textContent='分享链接已复制';}catch(e){status.textContent=url;}});
+    music.volume=Number(volume.value);musicToggle.addEventListener('click',async()=>{if(music.paused){try{await music.play();}catch(e){status.textContent='浏览器阻止播放，请再次点击按钮';}}else music.pause();});music.addEventListener('play',()=>musicToggle.textContent='暂停音乐');music.addEventListener('pause',()=>musicToggle.textContent='播放音乐');volume.addEventListener('input',()=>music.volume=Number(volume.value));
+  </script>
+</body>
+</html>
