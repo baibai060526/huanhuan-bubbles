@@ -52,8 +52,6 @@
     .custom-actions { display: flex; gap: 8px; }
     .custom-actions .small-button { flex: 1; }
     .share-status { min-height: 34px; margin-top: 8px; color: var(--rose-deep); font-size: 12px; line-height: 1.5; word-break: break-all; }
-    .file-name { margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; word-break: break-all; }
-    #bgmFile { width: 100%; color: var(--muted); font: inherit; font-size: 12px; }
     .music-box { margin-top: 18px; padding: 16px; border: 1px solid rgba(233,154,174,.28); border-radius: 18px; background: linear-gradient(135deg, rgba(255,248,250,.92), rgba(255,242,222,.66)); }
     .music-title { display: flex; justify-content: space-between; align-items: center; color: var(--ink); font-size: 14px; font-weight: 700; }
     .music-note { color: var(--rose); font-size: 22px; animation: musicPulse 1.5s ease-in-out infinite alternate; }
@@ -102,8 +100,6 @@
         <div class="music-box">
           <div class="music-title"><span>与你的独家记忆</span><span class="music-note">♪</span></div>
           <audio id="music" src="Nor%20-%20Sugar%20story.mp3" loop autoplay preload="auto"></audio>
-          <input id="bgmFile" type="file" accept="audio/*">
-          <div class="file-name" id="fileName">可选择本地音乐；本地音乐不会上传，分享链接不会携带音频文件</div>
           <div class="music-controls"><button class="music-toggle" id="musicToggle">播放音乐</button><label for="volume">音量</label><input id="volume" type="range" min="0" max="1" step="0.01" value="0.55"></div>
           <div class="music-hint" id="musicHint">音乐会循环播放，点击按钮即可暂停或继续播放</div>
         </div>
@@ -123,9 +119,9 @@
       '把一颗软乎乎的心意放在这里，送给独一无二的{name}。'
     ];
     const stage = document.getElementById('stage'), send = document.getElementById('send'), nickname = document.getElementById('nickname'), nicknameSave = document.getElementById('nicknameSave'), nicknameStatus = document.getElementById('nicknameStatus'), stagePrompt = document.getElementById('stagePrompt');
-    const customLinesInput = document.getElementById('customLines'), customSave = document.getElementById('customSave'), share = document.getElementById('share'), shareStatus = document.getElementById('shareStatus'), bgmFile = document.getElementById('bgmFile');
+    const customLinesInput = document.getElementById('customLines'), customSave = document.getElementById('customSave'), share = document.getElementById('share'), shareStatus = document.getElementById('shareStatus');
     const music = document.getElementById('music'), musicToggle = document.getElementById('musicToggle'), volume = document.getElementById('volume'), musicHint = document.getElementById('musicHint');
-    let currentName = '你', customLines = [], lines = [], nextLineIndex = 0, customBgmUrl = '';
+    let currentName = '你', customLines = [], lines = [], nextLineIndex = 0;
     try {
       const params = new URLSearchParams(window.location.search);
       currentName = (params.get('name') || localStorage.getItem('public-bubbles-nickname') || '').trim() || '你';
@@ -140,7 +136,6 @@
     nicknameSave.addEventListener('click', () => { currentName = nickname.value.trim() || '你'; nickname.value = currentName === '你' ? '' : currentName; try { localStorage.setItem('public-bubbles-nickname', currentName === '你' ? '' : currentName); } catch (_) {} refreshLines(); nicknameStatus.textContent = `已应用称呼“${currentName}”`; setTimeout(() => { nicknameStatus.textContent = ''; }, 2200); });
     customSave.addEventListener('click', () => { const added = customLinesInput.value.split(/\n+/).map(x => x.trim()).filter(Boolean); if (!added.length) { shareStatus.textContent = '请先写下至少一条气泡文字'; return; } customLines = [...customLines, ...added]; try { localStorage.setItem('public-bubbles-lines', customLines.join('\n')); } catch (_) {} customLinesInput.value = ''; refreshLines(); shareStatus.textContent = `已追加 ${added.length} 条文字，原有内容未被覆盖`; });
     share.addEventListener('click', async () => { const pending = customLinesInput.value.split(/\n+/).map(x => x.trim()).filter(Boolean); const allLines = [...customLines, ...pending]; const encodedLines = allLines.length ? btoa(unescape(encodeURIComponent(allLines.join('\n')))) : ''; const params = new URLSearchParams(); if (currentName !== '你') params.set('name', currentName); if (encodedLines) params.set('lines', encodedLines); const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`; try { await navigator.clipboard.writeText(shareUrl); shareStatus.textContent = '分享链接已复制，可直接发给访客'; } catch (_) { shareStatus.textContent = `请复制这个链接：${shareUrl}`; } });
-    bgmFile.addEventListener('change', () => { const file = bgmFile.files?.[0]; if (!file) return; if (customBgmUrl) URL.revokeObjectURL(customBgmUrl); customBgmUrl = URL.createObjectURL(file); music.src = customBgmUrl; music.play().catch(() => {}); document.getElementById('fileName').textContent = `当前音乐：${file.name}（仅当前设备可用）`; });
     send.addEventListener('click', floatBubble);
     music.volume = Number(volume.value); music.addEventListener('play', () => { musicToggle.textContent = '暂停音乐'; musicHint.textContent = '正在循环播放，随时可以暂停'; }); music.addEventListener('pause', () => { musicToggle.textContent = '播放音乐'; musicHint.textContent = '音乐已暂停，点击按钮继续播放'; }); musicToggle.addEventListener('click', async () => { if (music.paused) { try { await music.play(); } catch (_) { musicHint.textContent = '浏览器阻止了自动播放，请再次点击按钮'; } } else music.pause(); }); volume.addEventListener('input', () => { music.volume = Number(volume.value); }); music.play().catch(() => { musicHint.textContent = '点击“播放音乐”开始播放背景音乐'; });
     refreshLines(); createSparkles();
