@@ -9,7 +9,8 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; color: var(--ink); font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: radial-gradient(circle at 12% 15%, #ffe7ee 0 14%, transparent 34%), radial-gradient(circle at 88% 88%, #fff0ca 0 12%, transparent 31%), linear-gradient(135deg, #fffaf8, #fdf1f4 52%, #fffaf3); overflow-x: hidden; }
     .shell { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 42px; }
-    .hero { text-align: center; margin-bottom: 24px; }
+    .hero { position: relative; text-align: center; margin-bottom: 24px; }
+    .watermark { position: absolute; right: 0; bottom: -2px; color: rgba(146,112,124,.72); font-size: 11px; letter-spacing: .04em; }
     .eyebrow { color: var(--rose-deep); letter-spacing: .2em; font-size: 12px; font-weight: 700; }
     h1 { margin: 12px 0 10px; font-family: Georgia, "Songti SC", serif; font-size: clamp(34px, 6vw, 62px); font-weight: 500; letter-spacing: .04em; }
     .subtitle { color: var(--muted); margin: 0 auto; max-width: 620px; line-height: 1.8; }
@@ -19,11 +20,17 @@
     .stage::before, .stage::after { content: ""; position: absolute; border-radius: 50%; filter: blur(2px); opacity: .5; pointer-events: none; }
     .stage::before { width: 230px; height: 230px; background: #ffe1e9; top: -82px; right: -50px; }
     .stage::after { width: 170px; height: 170px; background: #fff0c9; bottom: -65px; left: -45px; }
-    .bubble { position: absolute; bottom: 145px; left: 50%; transform: translateX(-50%); max-width: min(78%, 460px); padding: 17px 25px 18px; border: 1px solid rgba(255,255,255,.9); border-radius: 24px 24px 24px 8px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,241,246,.9)); color: var(--ink); line-height: 1.7; letter-spacing: .03em; text-align: center; box-shadow: 0 12px 30px rgba(142, 70, 97, .17), 0 0 0 5px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.95); z-index: 2; animation: floatUp 7.6s cubic-bezier(.22,.7,.25,1) forwards; }
+    .bubble { position: absolute; bottom: 145px; left: 50%; transform: translateX(-50%); max-width: min(78%, 460px); padding: 17px 25px 18px; border: 1px solid rgba(255,255,255,.9); border-radius: 24px 24px 24px 8px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,241,246,.9)); color: var(--ink); line-height: 1.7; letter-spacing: .03em; text-align: center; box-shadow: 0 12px 30px rgba(142, 70, 97, .17), 0 0 0 5px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.95); z-index: 2; animation: floatUp 14s cubic-bezier(.22,.7,.25,1) forwards; transition: opacity 8s ease-in-out; }
     .bubble::before { content: "✦"; position: absolute; top: -14px; right: 17px; color: #ef9bb1; font-size: 15px; text-shadow: 0 2px 8px rgba(217,109,140,.35); animation: sparkle 1.8s ease-in-out infinite alternate; }
     .bubble::after { content: ""; position: absolute; bottom: -10px; left: 19px; width: 18px; height: 18px; border-right: 1px solid rgba(255,255,255,.9); border-bottom: 1px solid rgba(255,255,255,.9); background: #fff4f7; transform: rotate(35deg) skew(-8deg); }
     @keyframes sparkle { from { transform: scale(.78) rotate(-12deg); opacity: .45; } to { transform: scale(1.16) rotate(12deg); opacity: 1; } }
-    @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 38px) scale(.72) rotate(-4deg); filter: blur(2px); } 12% { opacity: 1; filter: blur(0); } 58% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--drift)), -390px) scale(1.08) rotate(var(--tilt)); filter: blur(1px); } }
+    @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 38px) scale(.72) rotate(-4deg); filter: blur(2px); } 12% { opacity: 1; filter: blur(0); } 100% { opacity: var(--bubble-opacity); transform: translate(calc(-50% + var(--drift)), -320px) scale(1.08) rotate(var(--tilt)); filter: blur(0); } }
+    .bubble.leaving { opacity: 0; pointer-events: none; }
+    @keyframes bubbleLeave { to { opacity: 0; transform: translate(calc(-50% + var(--drift)), -410px) scale(.82) rotate(var(--tilt)); filter: blur(3px); } }
+    .celebration { position:absolute; bottom:110px; left:50%; z-index:4; pointer-events:none; font-size:clamp(24px,4vw,42px); animation: celebrationFloat 3.4s ease-out forwards; }
+    .milestone-text { position:absolute; left:50%; bottom:42%; z-index:5; pointer-events:none; color:var(--rose-deep); font-size:clamp(22px,5vw,46px); font-weight:900; white-space:nowrap; text-shadow:0 3px 14px rgba(189,79,114,.22); animation: milestoneFloat 2.8s cubic-bezier(.2,.75,.25,1) forwards; }
+    @keyframes celebrationFloat { 0% { opacity:0; transform:translate(-50%,25px) scale(.5) rotate(-12deg); } 15% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50% + var(--x)), -300px) scale(1.25) rotate(var(--r)); } }
+    @keyframes milestoneFloat { 0% { opacity:0; transform:translate(-50%, 10px) scale(1.9); } 18% { opacity:1; transform:translate(-50%, 0) scale(1.45); } 100% { opacity:0; transform:translate(calc(-50% + var(--x)), -150px) scale(.45); } }
     .orb { position: absolute; inset: 0; pointer-events: none; }
     .spark { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #f4a9bb; opacity: .55; animation: twinkle 2.7s ease-in-out infinite alternate; }
     @keyframes twinkle { from { transform: scale(.5); opacity: .2; } to { transform: scale(1.5); opacity: .8; } }
@@ -61,6 +68,7 @@
       <div class="eyebrow">A LITTLE SOFTNESS FOR HUANHUAN</div>
       <h1>给浣浣的温柔气泡</h1>
       <p class="subtitle">每一次点击，都会有一句来自白白、认真写给浣浣的话，轻轻漂上来，像一颗不打扰的心意。</p>
+      <div class="watermark">——作者：白白爱吃菜丷</div>
     </header>
     <section class="layout">
       <div class="card stage" id="stage">
@@ -71,12 +79,8 @@
         </div>
       </div>
       <aside class="card panel">
-        <h2>写下专属气泡</h2>
-        <p class="hint">每次写一段新心意并点击保存，都会追加到气泡收藏中，不会覆盖之前的文字。每行仍会作为一条独立气泡。</p>
-        <textarea id="custom" placeholder="写下这一刻想对浣浣说的话……&#10;例如：今天路过熟悉的街角，白白又想起浣浣了"></textarea>
-        <button class="small-button" id="save">保存这份心意</button>
-        <button class="small-button" id="share">生成分享链接</button>
-        <div class="share-status" id="shareStatus" aria-live="polite"></div>
+        <h2>专属心意</h2>
+        <p class="hint">这里没有额外设置，每次点击按钮，都会按照顺序送出一条只写给浣浣的心意。</p>
         <div class="music-box">
           <div class="music-title"><span>与你的独家记忆</span><span class="music-note">♪</span></div>
           <audio id="music" src="Nor%20-%20Sugar%20story.mp3" loop autoplay preload="auto"></audio>
@@ -96,40 +100,52 @@
   </main>
   <script>
     const defaultLines = [
-      '浣浣，今天也辛苦啦，愿晚风替我把温柔送到身边。',
-      '如果世界偶尔喧闹，浣浣就先做自己的安静星球。',
-      '浣浣不用一直闪闪发光，被好好拥抱本身就很珍贵。',
-      '愿浣浣走过的每一段路，都有花开，也有值得的人等候。',
-      '浣浣的可爱不需要证明，它早就藏在每个不经意的瞬间里。',
-      '今天的快乐请签收，落款是：一直想念浣浣的白白。',
-      '浣浣，愿所有小小的期待，都在某个清晨如约抵达。',
-      '把一颗软乎乎的心意放在这里，送给独一无二的浣浣。'
-    ];
+      "浣浣，今天也辛苦啦，愿晚风替我把温柔送到身边。",
+      "如果世界偶尔喧闹，浣浣就先做自己的安静星球。",
+      "浣浣不用一直闪闪发光，被好好拥抱本身就很珍贵。",
+      "愿浣浣走过的每一段路，都有花开，也有值得的人等候。",
+      "浣浣的可爱不需要证明，它早就藏在每个不经意的瞬间里。",
+      "今天的快乐请签收，落款是：一直想念浣浣的白白。",
+      "浣浣，愿所有小小的期待，都在某个清晨如约抵达。",
+      "把一颗软乎乎的心意放在这里，送给独一无二的浣浣。",
+      "浣浣，我知道...可能我这个笨蛋不是很适合陪伴，但是我会努力在浣浣这里留下自己存在的印记。",
+      "总说，陪伴是最长久的告白...但我认为，如果有什么东西可以留存在心里，就已经足够了。",
+      "浣浣，我知道...其实自己不是很适合浣浣吧。但就算这样，我还是会努力想要在浣浣这里留下点什么，一点虚拟礼物？一点心意？一点感情？一点单薄的爱意...。",
+      "浣浣浣浣，我很享受和你在一起的时光......可以减缓我们之间的时间流速么，我想...多贪恋一下。",
+      "浣浣，我是很笨的人，所以我就想着做点自己还拿得出手的小玩意，希望浣浣不会讨厌。",
+      "浣浣，你知道么，每当看向夜空时，眼中一直浮现着，我脑海里你的身影，这样就缓解了，夜的孤独。",
+      "浣浣，我总是会担心，担心自己会被嫌弃会被讨厌，但是我会因你改变自己，请相信我那么一次吧。",
+      "可能因为我身边并非全是\"正常人\"以至于我格外珍惜...我可以接受自己被骗钱...可我唯独不能无视...感情的支离破碎。",
+      "我也不是很有钱，但我会降低别的非必要开销，来为你做点什么...那个拜托接受我的好意嘛...可能这是近年来...为数不多的机会了。",
+      "浣浣，可能我不是你的唯一...但对于我来说...你是我的大部分世界呐。",
+      "浣浣，我好想你，每当我清醒时，都在克制想你的心，因为你还没有醒过来，不能多加打扰你。",
+      "这样的白白，你能喜欢么，你会喜欢吗？",
+      "泪水总是在不经意间流下，每每止住，却又在一遍又一遍地落下。",
+      "浣浣，我好想你，有时我在幻想和你以后的光景，尽管这份光景既不现实也很遥远。",
+      "加油浣浣，就算我走啦，你也要过好自己的人生哦......",
+      "没关系的浣浣，如果你想甩掉我...很简单的啦，我也是乖孩子，不会当着你的面大哭大闹的...",
+      "文字好单薄，叠在一起会不会变得厚实一点呢。",
+      "浣浣，有时候有没有想我呢...",
+      "不想我也没关系...本来我也不是什么，特别优秀的人吧...",
+      "白白，你就是个普通人而已...",
+      "我有时总害怕，害怕未来...没有你的生活。",
+      "我的安全感...其实也很弱，可我知道你没那么精力悉心照料我...所以我会好好照顾自己...",
+      "浣浣，你是我为数不多想真心以待的人...",
+      "浣浣！浣浣！浣浣！",
+      "感谢你的观看...晚安，祝好梦。",
+      "我把今晚落进窗的星光都攒进了给你写的气泡里，字缝里全是没好意思说出口的软。等你明天醒来看见，就算隔着屏幕，也能摸到一点点我此刻发烫的脸颊呀。"
+];
     const stage = document.getElementById('stage');
-    const custom = document.getElementById('custom');
     const send = document.getElementById('send');
-    const save = document.getElementById('save');
-    const share = document.getElementById('share');
-    const shareStatus = document.getElementById('shareStatus');
     const music = document.getElementById('music');
     const musicToggle = document.getElementById('musicToggle');
     const volume = document.getElementById('volume');
     const musicHint = document.getElementById('musicHint');
     let lines = [...defaultLines];
-    let customLines = [];
     let nextLineIndex = 0;
-    let saved = false;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const shared = params.get('messages');
-      const stored = localStorage.getItem('huanhuan-bubbles');
-      const source = shared || stored;
-      if (source) {
-        const decoded = shared ? decodeURIComponent(escape(atob(shared))) : source;
-        customLines = decoded.split(/\n+/).map(x => x.trim()).filter(Boolean);
-        lines = [...defaultLines, ...customLines];
-      }
-    } catch (_) {}
+    let activeBubbles = [];
+    let clickCount = 0;
+    let lastClickAt = 0;
 
     function createSparkles() {
       const orb = document.getElementById('orb');
@@ -152,7 +168,54 @@
       oscillator.start();
       oscillator.stop(context.currentTime + 0.2);
     }
+    function playMilestoneSound() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const context = window.bubbleAudioContext || (window.bubbleAudioContext = new AudioContext());
+      if (context.state === 'suspended') context.resume();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(440, context.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(880, context.currentTime + 0.28);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.16, context.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.45);
+    }
+    function createMilestoneText() {
+      const phrases = ['我爱你','我真的非常想你','可不可以别离开我','和你一块的日子我真的很开心'];
+      const message = document.createElement('div');
+      message.className = 'milestone-text';
+      message.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+      message.style.setProperty('--x', `${Math.round((Math.random() - .5) * 220)}px`);
+      message.style.left = `${20 + Math.random() * 60}%`;
+      message.style.bottom = `${30 + Math.random() * 35}%`;
+      stage.appendChild(message);
+      setTimeout(() => message.remove(), 3000);
+    }
+    function createCelebration() {
+      playMilestoneSound();
+      createMilestoneText();
+      const symbols = ['🎈','💗','✦','✨','🌸','🎀'];
+      for (let i = 0; i < 12; i++) {
+        const decoration = document.createElement('span');
+        decoration.className = 'celebration';
+        decoration.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        decoration.style.setProperty('--x', `${Math.round((Math.random() - .5) * 360)}px`);
+        decoration.style.setProperty('--r', `${Math.round((Math.random() - .5) * 50)}deg`);
+        decoration.style.animationDelay = `${Math.random() * .65}s`;
+        stage.appendChild(decoration);
+        setTimeout(() => decoration.remove(), 4200);
+      }
+    }
     function floatBubble() {
+      const now = performance.now();
+      if (now - lastClickAt < 300) return;
+      lastClickAt = now;
+      clickCount += 1;
       playBubbleSound();
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
@@ -161,43 +224,20 @@
       bubble.style.setProperty('--drift', `${Math.round((Math.random() - .5) * 150)}px`);
       bubble.style.setProperty('--tilt', `${Math.round((Math.random() - .5) * 8)}deg`);
       bubble.style.setProperty('--hue', `${Math.round(Math.random() * 12)}deg`);
+      bubble.style.setProperty('--bubble-opacity', `${Math.max(.28, 1 - activeBubbles.length * .065)}`);
       bubble.style.filter = `hue-rotate(var(--hue))`;
       bubble.style.left = `${38 + Math.random() * 24}%`;
       bubble.style.bottom = `${128 + Math.random() * 28}px`;
       stage.appendChild(bubble);
-      setTimeout(() => bubble.remove(), 7600);
+      activeBubbles.push(bubble);
+      if (activeBubbles.length > 10) {
+        const oldest = activeBubbles.shift();
+        oldest.classList.add('leaving');
+        setTimeout(() => oldest.remove(), 850);
+      }
+      if (clickCount % 5 === 0) createCelebration();
     }
     send.addEventListener('click', floatBubble);
-    save.addEventListener('click', () => {
-      const added = custom.value.split(/\n+/).map(x => x.trim()).filter(Boolean);
-      if (!added.length) {
-        save.textContent = '请先写下新的心意';
-        setTimeout(() => { save.textContent = '保存这份心意'; }, 2200);
-        return;
-      }
-      customLines = [...customLines, ...added];
-      lines = [...defaultLines, ...customLines];
-      try { localStorage.setItem('huanhuan-bubbles', customLines.join('\n')); } catch (_) {}
-      custom.value = '';
-      saved = true; save.textContent = `已保存 ${added.length} 条，旧文字未被覆盖`;
-      setTimeout(() => { save.textContent = '保存这份心意'; saved = false; }, 2200);
-    });
-    share.addEventListener('click', async () => {
-      const pending = custom.value.split(/\n+/).map(x => x.trim()).filter(Boolean);
-      const allCustomLines = [...customLines, ...pending];
-      if (!allCustomLines.length) {
-        shareStatus.textContent = '请先写下至少一条自定义文案';
-        return;
-      }
-      const encoded = btoa(unescape(encodeURIComponent(allCustomLines.join('\n'))));
-      const shareUrl = `${window.location.origin}${window.location.pathname}?messages=${encodeURIComponent(encoded)}`;
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        shareStatus.textContent = '分享链接已复制，发给浣浣即可';
-      } catch (_) {
-        shareStatus.textContent = `请复制这个链接：${shareUrl}`;
-      }
-    });
     music.volume = Number(volume.value);
     music.addEventListener('play', () => { musicToggle.textContent = '暂停音乐'; musicHint.textContent = '正在循环播放，随时可以暂停'; });
     music.addEventListener('pause', () => { musicToggle.textContent = '播放音乐'; musicHint.textContent = '音乐已暂停，点击按钮继续播放'; });
