@@ -20,11 +20,13 @@
     .stage::before, .stage::after { content: ""; position: absolute; border-radius: 50%; filter: blur(2px); opacity: .5; pointer-events: none; }
     .stage::before { width: 230px; height: 230px; background: #ffe1e9; top: -82px; right: -50px; }
     .stage::after { width: 170px; height: 170px; background: #fff0c9; bottom: -65px; left: -45px; }
-    .bubble { position: absolute; bottom: 145px; left: 50%; transform: translateX(-50%); max-width: min(78%, 460px); padding: 17px 25px 18px; border: 1px solid rgba(255,255,255,.9); border-radius: 24px 24px 24px 8px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,241,246,.9)); color: var(--ink); line-height: 1.7; letter-spacing: .03em; text-align: center; box-shadow: 0 12px 30px rgba(142, 70, 97, .17), 0 0 0 5px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.95); z-index: 2; animation: floatUp 7.6s cubic-bezier(.22,.7,.25,1) forwards; }
+    .bubble { position: absolute; bottom: 145px; left: 50%; transform: translateX(-50%); max-width: min(78%, 460px); padding: 17px 25px 18px; border: 1px solid rgba(255,255,255,.9); border-radius: 24px 24px 24px 8px; background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,241,246,.9)); color: var(--ink); line-height: 1.7; letter-spacing: .03em; text-align: center; box-shadow: 0 12px 30px rgba(142, 70, 97, .17), 0 0 0 5px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.95); z-index: 2; animation: floatUp 14s cubic-bezier(.22,.7,.25,1) forwards; transition: opacity 8s ease-in-out; }
     .bubble::before { content: "✦"; position: absolute; top: -14px; right: 17px; color: #ef9bb1; font-size: 15px; text-shadow: 0 2px 8px rgba(217,109,140,.35); animation: sparkle 1.8s ease-in-out infinite alternate; }
     .bubble::after { content: ""; position: absolute; bottom: -10px; left: 19px; width: 18px; height: 18px; border-right: 1px solid rgba(255,255,255,.9); border-bottom: 1px solid rgba(255,255,255,.9); background: #fff4f7; transform: rotate(35deg) skew(-8deg); }
     @keyframes sparkle { from { transform: scale(.78) rotate(-12deg); opacity: .45; } to { transform: scale(1.16) rotate(12deg); opacity: 1; } }
-    @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 38px) scale(.72) rotate(-4deg); filter: blur(2px); } 12% { opacity: 1; filter: blur(0); } 58% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--drift)), -390px) scale(1.08) rotate(var(--tilt)); filter: blur(1px); } }
+    @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 38px) scale(.72) rotate(-4deg); filter: blur(2px); } 12% { opacity: 1; filter: blur(0); } 100% { opacity: var(--bubble-opacity); transform: translate(calc(-50% + var(--drift)), -320px) scale(1.08) rotate(var(--tilt)); filter: blur(0); } }
+    .bubble.leaving { opacity: 0; pointer-events: none; }
+    @keyframes bubbleLeave { to { opacity: 0; transform: translate(calc(-50% + var(--drift)), -410px) scale(.82) rotate(var(--tilt)); filter: blur(3px); } }
     .orb { position: absolute; inset: 0; pointer-events: none; }
     .spark { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #f4a9bb; opacity: .55; animation: twinkle 2.7s ease-in-out infinite alternate; }
     @keyframes twinkle { from { transform: scale(.5); opacity: .2; } to { transform: scale(1.5); opacity: .8; } }
@@ -124,7 +126,7 @@
     const stage = document.getElementById('stage'), send = document.getElementById('send'), nickname = document.getElementById('nickname'), nicknameSave = document.getElementById('nicknameSave'), authorNickname = document.getElementById('authorNickname'), authorNicknameSave = document.getElementById('authorNicknameSave'), nicknameStatus = document.getElementById('nicknameStatus'), stagePrompt = document.getElementById('stagePrompt');
     const customLinesInput = document.getElementById('customLines'), customSave = document.getElementById('customSave'), share = document.getElementById('share'), shareStatus = document.getElementById('shareStatus');
     const music = document.getElementById('music'), musicToggle = document.getElementById('musicToggle'), volume = document.getElementById('volume'), musicHint = document.getElementById('musicHint');
-    let currentName = '你', authorName = '我', customLines = [], lines = [], nextLineIndex = 0;
+    let currentName = '你', authorName = '我', customLines = [], lines = [], nextLineIndex = 0, activeBubbles = [], lastClickAt = 0;
     try {
       const params = new URLSearchParams(window.location.search);
       currentName = (params.get('name') || localStorage.getItem('public-bubbles-nickname') || '').trim() || '你';
@@ -137,7 +139,30 @@
     function refreshLines() { lines = [...defaultTemplates.map(line => line.replaceAll('{name}', currentName).replaceAll('{author}', authorName)), ...customLines]; document.getElementById('subtitle').textContent = `每一次点击，都会有一句来自${authorName}、认真写给你的话，轻轻漂上来，像一颗不打扰的心意。`; stagePrompt.textContent = `今天也为${currentName}留一朵来自${authorName}的小小浪漫`; send.textContent = `让${currentName}收到爱意 ♥`; }
     function createSparkles() { const orb = document.getElementById('orb'); for (let i = 0; i < 18; i++) { const dot = document.createElement('i'); dot.className = 'spark'; dot.style.left = `${8 + Math.random() * 84}%`; dot.style.top = `${7 + Math.random() * 67}%`; dot.style.animationDelay = `${Math.random() * 2}s`; orb.appendChild(dot); } }
     function playBubbleSound() { const AudioContext = window.AudioContext || window.webkitAudioContext; if (!AudioContext) return; const context = window.bubbleAudioContext || (window.bubbleAudioContext = new AudioContext()); if (context.state === 'suspended') context.resume(); const oscillator = context.createOscillator(), gain = context.createGain(); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(660, context.currentTime); oscillator.frequency.exponentialRampToValueAtTime(990, context.currentTime + 0.12); gain.gain.setValueAtTime(0.0001, context.currentTime); gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.015); gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.18); oscillator.connect(gain).connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + 0.2); }
-    function floatBubble() { playBubbleSound(); const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = lines[nextLineIndex]; nextLineIndex = (nextLineIndex + 1) % lines.length; bubble.style.setProperty('--drift', `${Math.round((Math.random() - .5) * 150)}px`); bubble.style.setProperty('--tilt', `${Math.round((Math.random() - .5) * 8)}deg`); bubble.style.setProperty('--hue', `${Math.round(Math.random() * 12)}deg`); bubble.style.filter = 'hue-rotate(var(--hue))'; bubble.style.left = `${38 + Math.random() * 24}%`; bubble.style.bottom = `${128 + Math.random() * 28}px`; stage.appendChild(bubble); setTimeout(() => bubble.remove(), 7600); }
+    function floatBubble() {
+      const now = performance.now();
+      if (now - lastClickAt < 300 || !lines.length) return;
+      lastClickAt = now;
+      playBubbleSound();
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = lines[nextLineIndex];
+      nextLineIndex = (nextLineIndex + 1) % lines.length;
+      bubble.style.setProperty('--drift', `${Math.round((Math.random() - .5) * 150)}px`);
+      bubble.style.setProperty('--tilt', `${Math.round((Math.random() - .5) * 8)}deg`);
+      bubble.style.setProperty('--hue', `${Math.round(Math.random() * 12)}deg`);
+      bubble.style.setProperty('--bubble-opacity', `${Math.max(.28, 1 - activeBubbles.length * .065)}`);
+      bubble.style.filter = 'hue-rotate(var(--hue))';
+      bubble.style.left = `${38 + Math.random() * 24}%`;
+      bubble.style.bottom = `${128 + Math.random() * 28}px`;
+      stage.appendChild(bubble);
+      activeBubbles.push(bubble);
+      if (activeBubbles.length > 10) {
+        const oldest = activeBubbles.shift();
+        oldest.classList.add('leaving');
+        setTimeout(() => oldest.remove(), 850);
+      }
+    }
     nicknameSave.addEventListener('click', () => { currentName = nickname.value.trim() || '你'; nickname.value = currentName === '你' ? '' : currentName; try { localStorage.setItem('public-bubbles-nickname', currentName === '你' ? '' : currentName); } catch (_) {} refreshLines(); nicknameStatus.textContent = `已应用称呼“${currentName}”`; setTimeout(() => { nicknameStatus.textContent = ''; }, 2200); });
     authorNicknameSave.addEventListener('click', () => { authorName = authorNickname.value.trim() || '我'; authorNickname.value = authorName === '我' ? '' : authorName; try { localStorage.setItem('public-bubbles-author', authorName === '我' ? '' : authorName); } catch (_) {} refreshLines(); nicknameStatus.textContent = `已应用我的昵称“${authorName}”`; setTimeout(() => { nicknameStatus.textContent = ''; }, 2200); });
     customSave.addEventListener('click', () => { const added = customLinesInput.value.split(/\n+/).map(x => x.trim()).filter(Boolean); if (!added.length) { shareStatus.textContent = '请先写下至少一条气泡文字'; return; } customLines = [...customLines, ...added]; try { localStorage.setItem('public-bubbles-lines', customLines.join('\n')); } catch (_) {} customLinesInput.value = ''; refreshLines(); shareStatus.textContent = `已追加 ${added.length} 条文字，原有内容未被覆盖`; });
